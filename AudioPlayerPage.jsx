@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import Slider from "@react-native-community/slider";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Picker } from "@react-native-picker/picker";
+import { StatusBar } from "expo-status-bar";
 
 const { width } = Dimensions.get("window");
 
@@ -26,9 +28,16 @@ const AudioPlayerPage = () => {
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const savedPositionRef = useRef(0);
 
   useEffect(() => {
     loadLastBook();
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -46,8 +55,12 @@ const AudioPlayerPage = () => {
   const loadLastBook = async () => {
     try {
       const savedBook = await AsyncStorage.getItem("lastAddedBook");
+      const savedPosition = await AsyncStorage.getItem("lastPlaybackPosition");
       if (savedBook) {
         setBook(JSON.parse(savedBook));
+      }
+      if (savedPosition) {
+        savedPositionRef.current = parseInt(savedPosition, 10);
       }
     } catch (error) {
       console.error("Error loading last book:", error);
@@ -64,12 +77,14 @@ const AudioPlayerPage = () => {
       console.log("Loading audio from:", audioUri);
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUri },
-        { shouldPlay: false }
+        { shouldPlay: false, positionMillis: savedPositionRef.current }
       );
       setSound(newSound);
       const status = await newSound.getStatusAsync();
       if (status.isLoaded) {
         setDuration(status.durationMillis || 0);
+        setPosition(savedPositionRef.current);
+        await newSound.setPositionAsync(savedPositionRef.current);
       } else {
         throw new Error("Failed to load audio");
       }
@@ -120,9 +135,26 @@ const AudioPlayerPage = () => {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
+  const changePlaybackSpeed = async (speed) => {
+    setPlaybackSpeed(speed);
+    if (sound) {
+      await sound.setRateAsync(speed, true);
+    }
+  };
+
+  const savePlaybackState = async () => {
+    try {
+      await AsyncStorage.setItem("lastPlaybackPosition", position.toString());
+      console.log("Playback position saved:", position);
+    } catch (error) {
+      console.error("Error saving playback position:", error);
+    }
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
         <View style={styles.content}>
           <ActivityIndicator size="large" color="#4a8fff" />
           <Text style={styles.loadingText}>Loading audio...</Text>
@@ -178,6 +210,23 @@ const AudioPlayerPage = () => {
             <MaterialIcons name="skip-next" size={32} color="#fff" />
           </TouchableOpacity>
         </View>
+        <View style={styles.speedContainer}>
+          <Text style={styles.speedLabel}>Playback Speed:</Text>
+          <Picker
+            selectedValue={playbackSpeed}
+            style={styles.speedPicker}
+            onValueChange={(itemValue) => changePlaybackSpeed(itemValue)}
+          >
+            <Picker.Item label="1x" value={1} />
+            <Picker.Item label="1.25x" value={1.25} />
+            <Picker.Item label="1.5x" value={1.5} />
+            <Picker.Item label="1.75x" value={1.75} />
+            <Picker.Item label="2x" value={2} />
+          </Picker>
+        </View>
+        <TouchableOpacity style={styles.saveButton} onPress={savePlaybackState}>
+          <Text style={styles.saveButtonText}>Save Current Position</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -198,7 +247,7 @@ const styles = StyleSheet.create({
     width: width * 0.8,
     height: width * 0.8,
     borderRadius: 10,
-    marginBottom: 30,
+    marginBottom: 20,
   },
   title: {
     fontSize: 24,
@@ -210,7 +259,7 @@ const styles = StyleSheet.create({
   author: {
     fontSize: 18,
     color: "#6a8caf",
-    marginBottom: 30,
+    marginBottom: 20,
     textAlign: "center",
   },
   slider: {
@@ -230,6 +279,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 20,
   },
   controlButton: {
     marginHorizontal: 20,
@@ -242,26 +292,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  speedContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  speedLabel: {
+    color: "#fff",
+    marginRight: 10,
+  },
+  speedPicker: {
+    width: 150,
+    color: "#fff",
+    backgroundColor: "#1e3a5f",
+  },
+  saveButton: {
+    backgroundColor: "#4a8fff",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   loadingText: {
     color: "#fff",
     marginTop: 20,
-    fontSize: 16,
   },
   errorText: {
     color: "#ff4a4a",
     textAlign: "center",
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: "#4a8fff",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-  },
-  retryButtonText: {
-    color: "#fff",
-    fontSize: 16,
   },
 });
 
