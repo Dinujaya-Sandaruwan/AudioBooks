@@ -8,10 +8,11 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, AntDesign } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -30,6 +31,7 @@ const AudioPlayerPage = () => {
   const [error, setError] = useState(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [openSpeed, setOpenSpeed] = useState(false);
+  const [remainingTime, setRemainingTime] = useState("");
   const savedPositionRef = useRef(0);
 
   useEffect(() => {
@@ -53,6 +55,10 @@ const AudioPlayerPage = () => {
       loadAudio(book.audioUri);
     }
   }, [book]);
+
+  useEffect(() => {
+    updateRemainingTime();
+  }, [position, duration, playbackSpeed]);
 
   const loadLastBook = async () => {
     try {
@@ -163,6 +169,21 @@ const AudioPlayerPage = () => {
     }
   };
 
+  const updateRemainingTime = () => {
+    const remainingMilliseconds = duration - position;
+    const adjustedRemainingMilliseconds = remainingMilliseconds / playbackSpeed;
+    const hours = Math.floor(adjustedRemainingMilliseconds / 3600000);
+    const minutes = Math.floor(
+      (adjustedRemainingMilliseconds % 3600000) / 60000
+    );
+    const seconds = Math.floor((adjustedRemainingMilliseconds % 60000) / 1000);
+    setRemainingTime(`${hours}h ${minutes}m ${seconds}s`);
+  };
+
+  const openGitHubRepo = () => {
+    Linking.openURL("https://github.com/Dinujaya-Sandaruwan/Sonora");
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -191,7 +212,6 @@ const AudioPlayerPage = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <View style={styles.content}>
-        <Text style={styles.appTitle}>Sonora</Text>
         <Image source={{ uri: book.coverUri }} style={styles.cover} />
         <Text style={styles.title}>{book.title}</Text>
         <Text style={styles.author}>{book.author}</Text>
@@ -209,6 +229,7 @@ const AudioPlayerPage = () => {
           <Text style={styles.timeText}>{formatTime(position)}</Text>
           <Text style={styles.timeText}>{formatTime(duration)}</Text>
         </View>
+        <Text style={styles.remainingTime}>Remaining: {remainingTime}</Text>
         <View style={styles.controlsContainer}>
           <TouchableOpacity
             style={styles.controlButton}
@@ -231,7 +252,6 @@ const AudioPlayerPage = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.speedContainer}>
-          {/* <Text style={styles.speedLabel}>Playback Speed:</Text> */}
           <DropDownPicker
             open={openSpeed}
             value={playbackSpeed}
@@ -248,9 +268,18 @@ const AudioPlayerPage = () => {
             style={styles.speedPicker}
             textStyle={styles.speedPickerText}
             dropDownContainerStyle={styles.speedPickerDropdown}
+            labelStyle={styles.speedPickerLabel}
+            arrowIconStyle={styles.speedPickerArrow}
+            tickIconStyle={styles.speedPickerTick}
+            listItemContainerStyle={styles.speedPickerItem}
+            listItemLabelStyle={styles.speedPickerItemLabel}
+            selectedItemContainerStyle={styles.speedPickerSelectedItem}
+            selectedItemLabelStyle={styles.speedPickerSelectedItemLabel}
+            placeholder="Speed"
             zIndex={1000}
           />
         </View>
+        <Text style={styles.footer}>Made by Dinujaya Sandaruwan</Text>
       </View>
     </SafeAreaView>
   );
@@ -260,6 +289,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0A1931",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   content: {
     flex: 1,
@@ -271,7 +307,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     color: "#4A90E2",
-    marginBottom: 20,
   },
   cover: {
     width: Math.min(width * 0.7, 300),
@@ -300,10 +335,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 5,
   },
   timeText: {
     color: "#B0B0B0",
+  },
+  remainingTime: {
+    color: "#4A90E2",
+    fontSize: 16,
+    marginBottom: 20,
   },
   controlsContainer: {
     flexDirection: "row",
@@ -323,30 +363,59 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   speedContainer: {
-    flexDirection: "row",
-    // alignItems: "center",
+    // flexDirection: "row",
     justifyContent: "center",
-
-    width: "100%",
+    alignItems: "center",
+    // width: "100%",
     marginBottom: 20,
     zIndex: 1000,
-  },
-  speedLabel: {
-    color: "#fff",
-    marginRight: 10,
   },
   speedPicker: {
     backgroundColor: "#1E3A5F",
     borderColor: "#4A90E2",
-    width: "auto",
+    borderWidth: 2,
+    borderRadius: 10,
+
+    width: 270,
   },
   speedPickerText: {
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   speedPickerDropdown: {
     backgroundColor: "#1E3A5F",
     borderColor: "#4A90E2",
-    width: "100%",
+    borderWidth: 2,
+    borderRadius: 10,
+    width: 270,
+  },
+  speedPickerLabel: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  speedPickerArrow: {
+    tintColor: "#4A90E2",
+  },
+  speedPickerTick: {
+    tintColor: "#4A90E2",
+  },
+  speedPickerItem: {
+    justifyContent: "center",
+    height: 40,
+    width: 270,
+  },
+  speedPickerItemLabel: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  speedPickerSelectedItem: {
+    backgroundColor: "#4A90E2",
+  },
+  speedPickerSelectedItemLabel: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   loadingText: {
     color: "#fff",
@@ -355,6 +424,12 @@ const styles = StyleSheet.create({
   errorText: {
     color: "#FF6B6B",
     textAlign: "center",
+  },
+  footer: {
+    color: "#6a8caf",
+    fontSize: 12,
+    textAlign: "center",
+    paddingBottom: 10,
   },
 });
 

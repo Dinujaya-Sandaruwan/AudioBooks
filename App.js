@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Linking, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
@@ -14,6 +14,10 @@ const Tab = createBottomTabNavigator();
 
 const MainApp = () => {
   const [initialBook, setInitialBook] = useState(null);
+
+  const openGitHubRepo = () => {
+    Linking.openURL("https://github.com/Dinujaya-Sandaruwan/Sonora");
+  };
 
   useEffect(() => {
     const loadInitialBook = async () => {
@@ -39,12 +43,12 @@ const MainApp = () => {
               backgroundColor: "#0a192f",
             },
             headerRight: () => (
-              <AntDesign
-                name="github"
+              <TouchableOpacity
+                onPress={openGitHubRepo}
                 style={styles.githubIcon}
-                size={24}
-                color="white"
-              />
+              >
+                <AntDesign name="github" size={24} color="white" />
+              </TouchableOpacity>
             ),
             headerLeft: () => (
               <Ionicons
