@@ -2,7 +2,7 @@
 
 Sonora is a lightweight, focused audiobook player designed to provide a seamless listening experience. With its intuitive interface and smart playback feature, Sonora makes it easy to enjoy your favorite books on the go.
 
-| Player   |      Add Books      |
+| Play Books   |      Add Books      |
 |----------|:-------------:|
 | ![01](https://github.com/user-attachments/assets/a72cf820-87f1-48d2-a88a-689517ff08cd) |  ![02](https://github.com/user-attachments/assets/2008ce93-2d65-4595-8251-8b9c08f593de) |
 
