@@ -1,16 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, StyleSheet, Linking, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { StatusBar } from "expo-status-bar";
 
 import BookDetailsPage from "./BookDetailsPage";
 import AudioPlayerPage from "./AudioPlayerPage";
 
 const Tab = createBottomTabNavigator();
+
+// Define your custom colors
+const Colors = {
+  primary: "#4a8fff",
+  background: "#0a192f",
+  card: "#1e3a5f",
+  text: "#ffffff",
+  border: "#1e3a5f",
+  notification: "#4a8fff",
+};
+
+// Create a custom theme
+const MyTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: Colors.primary,
+    background: Colors.background,
+    card: Colors.card,
+    text: Colors.text,
+    border: Colors.border,
+    notification: Colors.notification,
+  },
+};
 
 const MainApp = () => {
   const [initialBook, setInitialBook] = useState(null);
@@ -36,12 +61,10 @@ const MainApp = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationContainer>
+      <StatusBar style="light" />
+      <NavigationContainer theme={MyTheme}>
         <Tab.Navigator
           screenOptions={({ route }) => ({
-            contentStyle: {
-              backgroundColor: "#0a192f",
-            },
             headerRight: () => (
               <TouchableOpacity
                 onPress={openGitHubRepo}
@@ -70,11 +93,11 @@ const MainApp = () => {
                 <MaterialIcons name={iconName} size={size} color={color} />
               );
             },
-            tabBarActiveTintColor: "#4a8fff",
+            tabBarActiveTintColor: Colors.primary,
             tabBarInactiveTintColor: "#6a8caf",
             tabBarStyle: {
-              backgroundColor: "#0a192f",
-              borderTopColor: "#1e3a5f",
+              backgroundColor: Colors.background,
+              borderTopColor: Colors.border,
               borderTopWidth: 0,
               position: "absolute",
               bottom: 10,
@@ -83,9 +106,9 @@ const MainApp = () => {
               elevation: 0,
             },
             headerStyle: {
-              backgroundColor: "#0a192f",
+              backgroundColor: Colors.background,
             },
-            headerTintColor: "#fff",
+            headerTintColor: Colors.text,
             headerTitleStyle: {
               fontWeight: "bold",
             },
@@ -115,7 +138,7 @@ const MainApp = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a192f",
+    backgroundColor: Colors.background,
   },
   navIcon: {
     marginLeft: 15,

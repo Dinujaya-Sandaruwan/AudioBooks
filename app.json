@@ -1,16 +1,18 @@
 {
   "expo": {
-    "name": "audiobooks3",
-    "slug": "audiobooks3",
-    "version": "1.0.0",
+    "name": "Sonora",
+    "slug": "sonora-audiobooks",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#0a192f",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0a192f"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -18,10 +20,21 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a192f"
-      }
+      },
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#0a192f"
+      },
+      "package": "com.dinujaya_s.sonoraaudiobooks"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "507bcfd8-a7ad-4477-9fa5-58f082586d67"
+      }
     }
   }
 }
