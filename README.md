@@ -1,6 +1,6 @@
 # Sonora
 
-Sonora is a lightweight, focused audiobook player designed to provide a seamless listening experience. With its intuitive interface and smart playback feature, Sonora makes it easy to enjoy your favorite books on the go.
+Sonora is an open-source, lightweight audiobook player designed for a seamless and enjoyable listening experience. Built using React Native, Sonora focuses on simplicity while offering key features to enhance your audiobook journey.
 
 | Play Books   |      Add Books      |
 |----------|:-------------:|
@@ -9,10 +9,11 @@ Sonora is a lightweight, focused audiobook player designed to provide a seamless
 ## Features
 
 - **MP3 Playback**: Play any audiobook in MP3 format.
-- **Smart Resume**: Automatically saves your current playback position, allowing you to pick up right where you left off.
-- **Beautiful UI**: Enjoy a visually appealing interface with cover images, book author details, and descriptions.
-- **Lightweight**: Focused solely on audiobook playback for optimal performance.
-- **Expo AV Integration**: Utilizes Expo's AV library for high-quality audio playback.
+- **Real-time Remaining Time Display**: Adjusted according to playback speed, always know how much time is left in your book.
+- **Smart Resume**: Automatically saves your last playback position, so you can pick up where you left off without hassle.
+- **Beautiful UI**: Sleek and visually appealing interface that shows your current listening status, including the ability to share with friends what you're listening to.
+- **Expo AV Integration**: Utilizes Expo's AV library for reliable and high-quality audio playback.
+- **Open-source**: Sonora is an open-source project, allowing the developer community to contribute and improve the app further.
 
 ## Installation
 
@@ -20,7 +21,7 @@ To get started with Sonora, follow these steps:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/sonora.git
+   git clone https://github.com/Dinujaya-Sandaruwan/Sonora.git
    ```
 
 2. Navigate to the project directory:
@@ -60,7 +61,7 @@ For a full list of dependencies, please refer to the `package.json` file.
 
 ## Contributing
 
-We welcome contributions to Sonora! If you have suggestions or encounter any issues, please feel free to open an issue or submit a pull request.
+Sonora is an open-source project, and contributions are welcome! Whether you want to fix a bug, add a feature, or improve the documentation, feel free to open an issue or submit a pull request.
 
 ## License
 
@@ -82,7 +83,6 @@ limitations under the License.
 
 + Email: info.dinujaya@gmail.com
 + Website: dinujaya.me
-
 
 ---
 
