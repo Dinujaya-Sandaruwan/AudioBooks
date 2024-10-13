@@ -8,17 +8,16 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
-  Linking,
 } from "react-native";
 import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
-import { MaterialIcons, AntDesign } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DropDownPicker from "react-native-dropdown-picker";
 import { StatusBar } from "expo-status-bar";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const AudioPlayerPage = () => {
   const route = useRoute();
@@ -35,6 +34,16 @@ const AudioPlayerPage = () => {
   const savedPositionRef = useRef(0);
 
   useEffect(() => {
+    Audio.setAudioModeAsync({
+      staysActiveInBackground: true,
+      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+      allowsRecordingIOS: false,
+      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true,
+    });
+
     loadLastBook();
     return () => {
       if (sound) {
@@ -85,7 +94,8 @@ const AudioPlayerPage = () => {
       console.log("Loading audio from:", audioUri);
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUri },
-        { shouldPlay: false, positionMillis: savedPositionRef.current }
+        { shouldPlay: false, positionMillis: savedPositionRef.current },
+        onPlaybackStatusUpdate
       );
       setSound(newSound);
       const status = await newSound.getStatusAsync();
@@ -104,6 +114,13 @@ const AudioPlayerPage = () => {
     }
   };
 
+  const onPlaybackStatusUpdate = (status) => {
+    if (status.isLoaded) {
+      setPosition(status.positionMillis);
+      setIsPlaying(status.isPlaying);
+    }
+  };
+
   const togglePlayback = async () => {
     if (sound) {
       if (isPlaying) {
@@ -115,20 +132,6 @@ const AudioPlayerPage = () => {
       setIsPlaying(!isPlaying);
     }
   };
-
-  const updatePosition = async () => {
-    if (sound) {
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-        setPosition(status.positionMillis);
-      }
-    }
-  };
-
-  useEffect(() => {
-    const interval = setInterval(updatePosition, 1000);
-    return () => clearInterval(interval);
-  }, [sound]);
 
   const seekAudio = async (value) => {
     if (sound) {
@@ -178,10 +181,6 @@ const AudioPlayerPage = () => {
     );
     const seconds = Math.floor((adjustedRemainingMilliseconds % 60000) / 1000);
     setRemainingTime(`${hours}h ${minutes}m ${seconds}s`);
-  };
-
-  const openGitHubRepo = () => {
-    Linking.openURL("https://github.com/Dinujaya-Sandaruwan/Sonora");
   };
 
   if (isLoading) {

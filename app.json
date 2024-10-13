@@ -14,7 +14,10 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +29,13 @@
         "resizeMode": "contain",
         "backgroundColor": "#0a192f"
       },
+      "permissions": ["INTERNET", "FOREGROUND_SERVICE"],
+      "services": [
+        {
+          "name": "audio",
+          "foregroundService": true
+        }
+      ],
       "package": "com.dinujaya_s.sonoraaudiobooks"
     },
     "web": {
