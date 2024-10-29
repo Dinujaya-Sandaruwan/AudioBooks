@@ -12,12 +12,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#0a192f"
     },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ]
+    ],
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "UIBackgroundModes": ["audio"]
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +34,12 @@
         "resizeMode": "contain",
         "backgroundColor": "#0a192f"
       },
-      "permissions": ["INTERNET", "FOREGROUND_SERVICE"],
+      "permissions": [
+        "INTERNET",
+        "FOREGROUND_SERVICE",
+        "WAKE_LOCK",
+        "android.permission.FOREGROUND_SERVICE"
+      ],
       "services": [
         {
           "name": "audio",

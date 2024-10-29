@@ -8,8 +8,12 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
+  AppState,
+  Platform,
 } from "react-native";
 import { Audio } from "expo-av";
+import * as BackgroundFetch from "expo-background-fetch";
+import * as TaskManager from "expo-task-manager";
 import Slider from "@react-native-community/slider";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
@@ -18,6 +22,12 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { StatusBar } from "expo-status-bar";
 
 const { width } = Dimensions.get("window");
+
+const BACKGROUND_AUDIO_TASK = "background-audio-task";
+
+TaskManager.defineTask(BACKGROUND_AUDIO_TASK, async () => {
+  return BackgroundFetch.BackgroundFetchResult.NewData;
+});
 
 const AudioPlayerPage = () => {
   const route = useRoute();
@@ -32,26 +42,113 @@ const AudioPlayerPage = () => {
   const [openSpeed, setOpenSpeed] = useState(false);
   const [remainingTime, setRemainingTime] = useState("");
   const savedPositionRef = useRef(0);
+  const appStateRef = useRef(AppState.currentState);
 
   useEffect(() => {
-    Audio.setAudioModeAsync({
-      staysActiveInBackground: true,
-      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-      shouldDuckAndroid: true,
-      playThroughEarpieceAndroid: false,
-      allowsRecordingIOS: false,
-      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-      playsInSilentModeIOS: true,
-    });
-
+    setupAudio();
+    setupRemoteControls();
+    setupAppStateListener();
     loadLastBook();
+
     return () => {
-      if (sound) {
-        savePlaybackState();
-        sound.unloadAsync();
-      }
+      cleanupAudio();
+      cleanupRemoteControls();
     };
   }, []);
+
+  const setupRemoteControls = async () => {
+    try {
+      // Register background task
+      await BackgroundFetch.registerTaskAsync(BACKGROUND_AUDIO_TASK, {
+        minimumInterval: 1, // 1 second
+        stopOnTerminate: false,
+        startOnBoot: true,
+      });
+
+      // Set up audio session
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: true,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        interruptionModeIOS: 1,
+        interruptionModeAndroid: 1,
+      });
+
+      // Configure playback info
+      if (sound) {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+        });
+
+        // Set metadata for lock screen
+        await Audio.setAudioModeAsync({
+          androidImplementation: "MediaPlayer",
+        });
+      }
+    } catch (error) {
+      console.error("Error setting up remote controls:", error);
+    }
+  };
+
+  const cleanupRemoteControls = async () => {
+    try {
+      await BackgroundFetch.unregisterTaskAsync(BACKGROUND_AUDIO_TASK);
+    } catch (error) {
+      console.error("Error cleaning up remote controls:", error);
+    }
+  };
+
+  const setupAudio = async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: true,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        interruptionModeIOS: 1,
+        interruptionModeAndroid: 1,
+      });
+    } catch (error) {
+      console.error("Error setting up audio mode:", error);
+    }
+  };
+
+  const setupAppStateListener = () => {
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+    return () => {
+      subscription.remove();
+    };
+  };
+
+  const handleAppStateChange = async (nextAppState) => {
+    if (
+      appStateRef.current === "active" &&
+      nextAppState.match(/inactive|background/)
+    ) {
+      // App is going to background
+      await savePlaybackState();
+    } else if (
+      appStateRef.current.match(/inactive|background/) &&
+      nextAppState === "active"
+    ) {
+      // App is coming to foreground
+      await loadPlaybackState();
+    }
+    appStateRef.current = nextAppState;
+  };
+
+  const cleanupAudio = async () => {
+    if (sound) {
+      await savePlaybackState();
+      await sound.unloadAsync();
+    }
+  };
 
   useEffect(() => {
     if (route.params?.book) {
@@ -91,12 +188,34 @@ const AudioPlayerPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log("Loading audio from:", audioUri);
+      if (sound) {
+        await sound.unloadAsync();
+      }
+
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUri },
-        { shouldPlay: false, positionMillis: savedPositionRef.current },
+        {
+          shouldPlay: false,
+          positionMillis: savedPositionRef.current,
+          progressUpdateIntervalMillis: 1000,
+          staysActiveInBackground: true,
+          isLooping: false,
+        },
         onPlaybackStatusUpdate
       );
+
+      // Configure audio session for the new sound
+      await configureAudioSession(newSound, book);
+
+      // Set up interruption handling
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          setIsPlaying(false);
+          savePlaybackState();
+        }
+        onPlaybackStatusUpdate(status);
+      });
+
       setSound(newSound);
       const status = await newSound.getStatusAsync();
       if (status.isLoaded) {
@@ -114,22 +233,89 @@ const AudioPlayerPage = () => {
     }
   };
 
+  const configureAudioSession = async (sound, book) => {
+    try {
+      // Set metadata for lock screen and control center
+      await Audio.setAudioModeAsync({
+        androidImplementation: "MediaPlayer",
+      });
+
+      if (Platform.OS === "ios") {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          interruptionModeIOS: 1,
+        });
+      } else {
+        // Android-specific configuration
+        await Audio.setAudioModeAsync({
+          shouldDuckAndroid: true,
+          interruptionModeAndroid: 1,
+          playThroughEarpieceAndroid: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error configuring audio session:", error);
+    }
+  };
+
   const onPlaybackStatusUpdate = (status) => {
     if (status.isLoaded) {
       setPosition(status.positionMillis);
       setIsPlaying(status.isPlaying);
+
+      // Save position periodically during playback
+      if (status.isPlaying) {
+        savedPositionRef.current = status.positionMillis;
+        AsyncStorage.setItem(
+          "lastPlaybackPosition",
+          status.positionMillis.toString()
+        ).catch((error) => console.error("Error saving position:", error));
+      }
+    }
+  };
+
+  const loadPlaybackState = async () => {
+    try {
+      const savedPosition = await AsyncStorage.getItem("lastPlaybackPosition");
+      if (savedPosition && sound) {
+        const positionMillis = parseInt(savedPosition, 10);
+        await sound.setPositionAsync(positionMillis);
+        setPosition(positionMillis);
+      }
+    } catch (error) {
+      console.error("Error loading playback state:", error);
     }
   };
 
   const togglePlayback = async () => {
     if (sound) {
-      if (isPlaying) {
-        await sound.pauseAsync();
-        await savePlaybackState();
-      } else {
-        await sound.playAsync();
+      try {
+        if (isPlaying) {
+          await sound.pauseAsync();
+          await savePlaybackState();
+        } else {
+          await sound.playAsync();
+          // Update remote control info when playing
+          await updateRemoteControl();
+        }
+        setIsPlaying(!isPlaying);
+      } catch (error) {
+        console.error("Error toggling playback:", error);
       }
-      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const updateRemoteControl = async () => {
+    try {
+      if (book) {
+        // Update now playing info
+        await Audio.setAudioModeAsync({
+          androidImplementation: "MediaPlayer",
+          playsInSilentModeIOS: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating remote control:", error);
     }
   };
 

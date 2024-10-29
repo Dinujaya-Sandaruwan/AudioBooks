@@ -26,6 +26,9 @@ dependencies:
   expo-av:
     specifier: ~14.0.7
     version: 14.0.7(expo@51.0.31)
+  expo-background-fetch:
+    specifier: ^12.0.1
+    version: 12.0.1(expo@51.0.31)
   expo-document-picker:
     specifier: ~12.0.2
     version: 12.0.2(expo@51.0.31)
@@ -3960,6 +3963,15 @@ packages:
       expo: 51.0.31(@babel/core@7.25.2)(@babel/preset-env@7.25.4)
     dev: false
 
+  /expo-background-fetch@12.0.1(expo@51.0.31):
+    resolution: {integrity: sha512-8915rCoRKWBwCkhSSowv2+kH+QV6YYR7ES8r+yWAUPQ0vq+26NojeWAZtR0vCyTW+QLsQrYVV5Eh0brpZIMS7w==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 51.0.31(@babel/core@7.25.2)(@babel/preset-env@7.25.4)
+      expo-task-manager: 11.8.2(expo@51.0.31)
+    dev: false
+
   /expo-constants@16.0.2(expo@51.0.31):
     resolution: {integrity: sha512-9tNY3OVO0jfiMzl7ngb6IOyR5VFzNoN5OOazUWoeGfmMqVB5kltTemRvKraK9JRbBKIw+SOYLEmF0sEqgFZ6OQ==}
     peerDependencies:
@@ -4026,6 +4038,15 @@ packages:
 
   /expo-status-bar@1.12.1:
     resolution: {integrity: sha512-/t3xdbS8KB0prj5KG5w7z+wZPFlPtkgs95BsmrP/E7Q0xHXTcDcQ6Cu2FkFuRM+PKTb17cJDnLkawyS5vDLxMA==}
+    dev: false
+
+  /expo-task-manager@11.8.2(expo@51.0.31):
+    resolution: {integrity: sha512-Uhy3ol5gYeZOyeRFddYjLI1B2DGRH1gjp/YC8Hpn5p5MVENviySoKNF+wd98rRvOAokzrzElyDBHSTfX+C3tpg==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 51.0.31(@babel/core@7.25.2)(@babel/preset-env@7.25.4)
+      unimodules-app-loader: 4.6.0
     dev: false
 
   /expo@51.0.31(@babel/core@7.25.2)(@babel/preset-env@7.25.4):
@@ -7356,6 +7377,10 @@ packages:
   /unicode-property-aliases-ecmascript@2.1.0:
     resolution: {integrity: sha512-6t3foTQI9qne+OZoVQB/8x8rk2k1eVy1gRXhV3oFQ5T6R1dqQ1xtin3XqSlx3+ATBkliTaR/hHyJBm+LVPNM8w==}
     engines: {node: '>=4'}
+    dev: false
+
+  /unimodules-app-loader@4.6.0:
+    resolution: {integrity: sha512-FRNIlx7sLBDVPG117JnEBhnzZkTIgZTEwYW2rzrY9HdvLBTpRN+k0dxY50U/CAhFHW3zMD0OP5JAlnSQRhx5HA==}
     dev: false
 
   /unique-filename@3.0.0:
